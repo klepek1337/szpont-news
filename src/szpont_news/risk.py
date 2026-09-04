@@ -5,7 +5,7 @@ from szpont_news.models import (
     EventImportance,
     EventRisk,
     InformationBias,
-    MarketMove,
+    MarketPrice,
     NewsItem,
     RadarAssessment,
     ScheduledEvent,
@@ -18,7 +18,7 @@ def build_radar_assessment(
     now: datetime,
     events: tuple[ScheduledEvent, ...],
     news: tuple[NewsItem, ...],
-    market_move: MarketMove,
+    market_price: MarketPrice,
     configuration: RadarConfiguration | None = None,
 ) -> RadarAssessment:
     selected_configuration = configuration or RadarConfiguration()
@@ -38,21 +38,14 @@ def build_radar_assessment(
     event_risk = _classify_event_risk(
         upcoming_events, now, selected_configuration
     )
-    unusual_move = (
-        market_move.unusual_move_ratio
-        >= selected_configuration.unusual_move_multiple
-    )
     trading_mode = _classify_trading_mode(
         event_risk=event_risk,
-        has_recent_event=bool(recent_events),
-        unusual_move=unusual_move,
+        has_recent_high_impact_event=_has_high_impact_event(recent_events),
     )
     information_bias = _combine_information_bias(upcoming_events, recent_news)
     reasons = _build_reasons(
         upcoming_events=upcoming_events,
         recent_events=recent_events,
-        market_move=market_move,
-        unusual_move=unusual_move,
     )
     return RadarAssessment(
         generated_at=now,
@@ -61,7 +54,7 @@ def build_radar_assessment(
         trading_mode=trading_mode,
         upcoming_events=upcoming_events,
         recent_news=recent_news,
-        market_move=market_move,
+        market_price=market_price,
         reasons=reasons,
     )
 
@@ -98,12 +91,12 @@ def _classify_event_risk(upcoming_events, now, configuration):
     return EventRisk.MEDIUM
 
 
-def _classify_trading_mode(*, event_risk, has_recent_event, unusual_move):
-    if has_recent_event and unusual_move:
+def _classify_trading_mode(*, event_risk, has_recent_high_impact_event):
+    if has_recent_high_impact_event:
         return TradingMode.WAIT_FOR_REACTION
     if event_risk == EventRisk.CRITICAL:
         return TradingMode.WAIT_FOR_EVENT
-    if event_risk in (EventRisk.HIGH, EventRisk.MEDIUM) or unusual_move:
+    if event_risk in (EventRisk.HIGH, EventRisk.MEDIUM):
         return TradingMode.CAUTION
     return TradingMode.NORMAL
 
@@ -129,19 +122,22 @@ def _combine_information_bias(events, news):
     return InformationBias.UNKNOWN
 
 
-def _build_reasons(*, upcoming_events, recent_events, market_move, unusual_move):
+def _has_high_impact_event(events):
+    return any(
+        event.importance in (EventImportance.HIGH, EventImportance.CRITICAL)
+        for event in events
+    )
+
+
+def _build_reasons(*, upcoming_events, recent_events):
     reasons = []
     if upcoming_events:
         next_event = upcoming_events[0]
         reasons.append(f"next event: {next_event.name}")
     if recent_events:
         reasons.append(f"recent event: {recent_events[-1].name}")
-    if unusual_move:
-        reasons.append(
-            f"unusual 4H move: {market_move.unusual_move_ratio:.1f}x typical"
-        )
     if not reasons:
-        reasons.append("no elevated event or price-move risk detected")
+        reasons.append("no elevated information risk detected")
     return tuple(reasons)
 
 

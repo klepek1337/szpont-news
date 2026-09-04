@@ -9,13 +9,16 @@ proves why a market moved.
 
 ## Stage 1
 
-- fetches closed 4H BTC candles from the public OKX API;
-- compares the latest move with typical recent 4H volatility;
+- fetches only the current BTC ticker from the public OKX API as display context;
 - reads a timezone-aware event calendar from JSON;
 - reads configured official, geopolitical, and crypto RSS feeds;
 - classifies `BIAS`, `EVENT RISK`, and `TRADING MODE` separately;
 - prints an evidence-linked report and can send it to Telegram;
 - installs a Windows Scheduled Task running every four hours.
+
+Price does not influence `BIAS`, `EVENT RISK`, or `TRADING MODE`. The project does
+not fetch candles or perform technical analysis. All classifications come from
+scheduled events and information feeds.
 
 The first stage deliberately uses a reviewed event file. RSS headlines are fetched
 automatically, but their keyword bias is only a transparent heuristic. Automatic

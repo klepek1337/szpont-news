@@ -36,12 +36,12 @@ def _run_report(arguments: argparse.Namespace) -> None:
     now = datetime.now(UTC)
     events = load_scheduled_events(arguments.events)
     news = fetch_feed_news(load_feed_definitions(arguments.feeds))
-    market_move = OkxMarketClient().get_four_hour_market_move(arguments.instrument)
+    market_price = OkxMarketClient().get_market_price(arguments.instrument)
     assessment = build_radar_assessment(
         now=now,
         events=events,
         news=news,
-        market_move=market_move,
+        market_price=market_price,
     )
     report = format_radar_report(assessment)
     print(report)

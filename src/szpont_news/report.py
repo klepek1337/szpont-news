@@ -9,20 +9,19 @@ def format_radar_report(
     configuration: RadarConfiguration | None = None,
 ) -> str:
     selected_configuration = configuration or RadarConfiguration()
-    move = assessment.market_move
+    market_price = assessment.market_price
     lines = [
         "SZPONT NEWS RADAR",
         f"Generated: {assessment.generated_at.astimezone(UTC).isoformat()}",
-        f"Instrument: {move.instrument_id}",
+        f"Instrument: {market_price.instrument_id}",
         "",
         f"Bias: {assessment.information_bias.value.upper()}",
         f"Event risk: {assessment.event_risk.value.upper()}",
         f"Trading mode: {assessment.trading_mode.value.upper()}",
         "",
-        "MARKET",
-        f"Price: {move.last_price:,.2f}",
-        f"4H change: {move.four_hour_return:+.2%}",
-        f"Move / typical: {move.unusual_move_ratio:.1f}x",
+        "MARKET CONTEXT — DISPLAY ONLY",
+        f"Price: {market_price.last_price:,.2f}",
+        f"24H change: {_format_optional_percentage(market_price.twenty_four_hour_change)}",
         "",
         "UPCOMING EVENTS",
     ]
@@ -61,3 +60,7 @@ def _format_duration(duration) -> str:
     if hours:
         return f"{hours}h {minutes}m"
     return f"{minutes}m"
+
+
+def _format_optional_percentage(value: float | None) -> str:
+    return f"{value:+.2%}" if value is not None else "not available"

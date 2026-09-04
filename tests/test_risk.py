@@ -4,7 +4,7 @@ from szpont_news.models import (
     EventImportance,
     EventRisk,
     InformationBias,
-    MarketMove,
+    MarketPrice,
     ScheduledEvent,
     TradingMode,
 )
@@ -13,8 +13,8 @@ from szpont_news.risk import build_radar_assessment
 NOW = datetime(2026, 9, 4, 12, tzinfo=UTC)
 
 
-def _market_move(current_return: float = 0.01) -> MarketMove:
-    return MarketMove("BTC-USDT-SWAP", 82_000, current_return, 0.01)
+def _market_price() -> MarketPrice:
+    return MarketPrice("BTC-USDT-SWAP", 82_000, 0.01)
 
 
 def _critical_event(starts_at: datetime) -> ScheduledEvent:
@@ -35,7 +35,7 @@ def test_waits_for_critical_event_inside_warning_window() -> None:
         now=NOW,
         events=(_critical_event(NOW + timedelta(minutes=30)),),
         news=(),
-        market_move=_market_move(),
+        market_price=_market_price(),
     )
 
     assert assessment.event_risk == EventRisk.CRITICAL
@@ -43,23 +43,23 @@ def test_waits_for_critical_event_inside_warning_window() -> None:
     assert assessment.information_bias == InformationBias.MIXED
 
 
-def test_waits_for_reaction_after_event_and_unusual_move() -> None:
+def test_waits_for_reaction_after_recent_critical_event() -> None:
     assessment = build_radar_assessment(
         now=NOW,
         events=(_critical_event(NOW - timedelta(minutes=10)),),
         news=(),
-        market_move=_market_move(current_return=-0.03),
+        market_price=_market_price(),
     )
 
     assert assessment.trading_mode == TradingMode.WAIT_FOR_REACTION
 
 
-def test_normal_mode_without_event_or_unusual_move() -> None:
+def test_normal_mode_without_information_risk() -> None:
     assessment = build_radar_assessment(
         now=NOW,
         events=(),
         news=(),
-        market_move=_market_move(),
+        market_price=_market_price(),
     )
 
     assert assessment.event_risk == EventRisk.LOW

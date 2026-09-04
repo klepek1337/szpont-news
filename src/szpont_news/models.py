@@ -67,17 +67,10 @@ class NewsItem:
 
 
 @dataclass(frozen=True)
-class MarketMove:
+class MarketPrice:
     instrument_id: str
     last_price: float
-    four_hour_return: float
-    typical_absolute_four_hour_return: float
-
-    @property
-    def unusual_move_ratio(self) -> float:
-        if self.typical_absolute_four_hour_return == 0:
-            return 0.0
-        return abs(self.four_hour_return) / self.typical_absolute_four_hour_return
+    twenty_four_hour_change: float | None
 
 
 @dataclass(frozen=True)
@@ -88,5 +81,5 @@ class RadarAssessment:
     trading_mode: TradingMode
     upcoming_events: tuple[ScheduledEvent, ...]
     recent_news: tuple[NewsItem, ...]
-    market_move: MarketMove
+    market_price: MarketPrice
     reasons: tuple[str, ...]
