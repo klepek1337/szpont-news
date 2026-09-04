@@ -1,0 +1,15 @@
+[
+  {
+    "event_id": "us-nfp-example",
+    "name": "US Nonfarm Payrolls",
+    "starts_at": "2026-09-04T12:30:00Z",
+    "importance": "critical",
+    "potential_bias": "mixed",
+    "source_name": "US Bureau of Labor Statistics",
+    "source_url": "https://www.bls.gov/schedule/news_release/empsit.htm",
+    "scenarios": [
+      "Stronger employment can pressure crypto through higher rate expectations",
+      "Weaker employment can support crypto unless recession risk dominates"
+    ]
+  }
+]
